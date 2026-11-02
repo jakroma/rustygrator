@@ -1,0 +1,9 @@
+# Benchmark runner for e2e/docker-compose.bench.yml: release build (fat LTO) of rustygrator and
+# the benchmark tool, then one run of the selected profile.
+FROM rust:1-bookworm
+
+WORKDIR /rustygrator
+COPY . .
+RUN cargo build --release -p rustygrator-cli -p rustygrator-bench
+
+CMD ["sh", "-c", "exec /rustygrator/target/release/rustygrator-bench --bin /rustygrator/target/release/rustygrator --profile \"$BENCH_PROFILE\" --work-dir /work --out \"/results/results-$BENCH_PROFILE.json\" --baseline \"/results/baseline-$BENCH_PROFILE.json\" ${BENCH_SAVE_BASELINE:+--save-baseline}"]

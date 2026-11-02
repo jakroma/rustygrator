@@ -6,3 +6,5 @@ Cargo.lock
 git
 dbcTemp
 .vscode/
+SPEC.md
+PROGRESS.md

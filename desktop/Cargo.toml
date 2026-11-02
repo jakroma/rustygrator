@@ -1,0 +1,37 @@
+[package]
+name = "rustygrator-desktop"
+version = "0.1.0"
+edition = "2021"
+description = "Desktop app for rustygrator: browse databases, run migrations and live transfers"
+
+[dependencies]
+rustygrator-core = { path = "../core" }
+# APP-2, APP-7: GPU renderer (wgpu) with the tiny-skia fallback, low-level widget API, canvas charts,
+# syntax highlighting for the query editor, image preview, tokio executor shared with core
+iced = { version = "0.14", features = ["tokio", "advanced", "canvas", "highlighter", "image"] }
+tokio = { version = "1.35.1", features = ["full"] }
+clap = { version = "4.4.18", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4"
+env_logger = "0.11.3"
+url = "2.5.0"
+# APP-9: native file dialogs and the system keychain (CONN-2)
+rfd = "0.17"
+keyring = { version = "3.6", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust", "vendored"] }
+
+# APP-9: native macOS menu bar
+[target.'cfg(target_os = "macos")'.dependencies]
+muda = "0.21"
+
+[dev-dependencies]
+tempfile = "3"
+# headless rendering of the UI for tests, screenshots and UI benchmarks (APERF-5); Fira Sans is
+# the font the headless renderer draws text with
+iced_test = "0.14"
+iced = { version = "0.14", features = ["fira-sans"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+[[bin]]
+name = "rustygrator-desktop"
+path = "src/main.rs"

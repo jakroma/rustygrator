@@ -1,69 +1,50 @@
-pub const NOT_NULL: &str = "NOT NULL";
-pub const SERIAL_PRIMARY_KEY: &str = "SERIAL PRIMARY KEY";
 pub const DEFAULT_SCHEMA: &str = "public";
-pub const POSTGRESQL_SCHEMA_TABLE: &str = "SELECT table_schema, table_name FROM information_schema.tables";
-pub const POSTGRESQL_SCHEMA_TABLE_WHERE: &str = "SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema = $1";
+
+/// Base tables, optionally filtered by schema ($1 may be NULL).
+pub const POSTGRESQL_TABLES_QUERY: &str = "
+SELECT table_schema::text, table_name::text
+FROM information_schema.tables
+WHERE table_type = 'BASE TABLE'
+  AND table_schema NOT IN ('pg_catalog', 'information_schema')
+  AND ($1::text IS NULL OR table_schema = $1::text)
+ORDER BY table_schema, table_name";
+
 pub const POSTGRESQL_COLUMNS_QUERY: &str = "
-WITH fk_info AS (
-    SELECT
-        fk.table_schema AS table_schema,
-        fk.table_name AS table_name,
-        fk.column_name AS column_name,
-        pk.table_schema AS foreign_table_schema,
-        pk.table_name AS foreign_table_name,
-        pk.column_name AS foreign_column_name
-    FROM
-        information_schema.key_column_usage AS fk
-    JOIN
-        information_schema.referential_constraints AS rc
-        ON fk.constraint_name = rc.constraint_name
-    JOIN
-        information_schema.key_column_usage AS pk
-        ON rc.unique_constraint_name = pk.constraint_name
-        AND fk.ordinal_position = pk.ordinal_position
-)
-SELECT 
-    c.table_schema,
-    c.table_name,
-    c.column_name,
-    c.data_type,
-    CASE
-        WHEN c.is_nullable = 'YES' THEN true
-        ELSE false
-    END as is_nullable,
-    CASE
-        WHEN tc.constraint_type = 'PRIMARY KEY' THEN true
-        ELSE false
-    END as is_primary_key,
-    CASE
-        WHEN fk_info.foreign_table_name IS NOT NULL THEN true
-        ELSE false
-    END as is_foreign_key,
-    CASE
-        WHEN fk_info.foreign_table_name IS NOT NULL THEN fk_info.foreign_table_schema || '.' || fk_info.foreign_table_name
-        ELSE NULL
-    END as foreign_table_full_name,
-    fk_info.foreign_column_name
-FROM 
-    information_schema.columns c
-LEFT JOIN 
-    information_schema.key_column_usage kcu
-    ON c.table_schema = kcu.table_schema 
-    AND c.table_name = kcu.table_name 
-    AND c.column_name = kcu.column_name
-LEFT JOIN 
-    information_schema.table_constraints tc
-    ON kcu.constraint_name = tc.constraint_name 
-    AND kcu.table_schema = tc.table_schema 
-    AND kcu.table_name = tc.table_name 
-    AND tc.constraint_type = 'PRIMARY KEY'
-LEFT JOIN 
-    fk_info ON c.table_schema = fk_info.table_schema 
-    AND c.table_name = fk_info.table_name 
-    AND c.column_name = fk_info.column_name
-WHERE 
-    c.table_schema = $1 
-    AND c.table_name = $2
-ORDER BY 
-    c.ordinal_position;
-";
+SELECT c.column_name::text, c.data_type::text, (c.is_nullable = 'YES') AS is_nullable,
+       EXISTS (
+           SELECT 1 FROM pg_constraint pc
+           JOIN pg_class t ON t.oid = pc.conrelid
+           JOIN pg_namespace n ON n.oid = t.relnamespace
+           JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY (pc.conkey)
+           WHERE pc.contype = 'p' AND n.nspname = c.table_schema AND t.relname = c.table_name
+             AND a.attname = c.column_name
+       ) AS is_primary_key
+FROM information_schema.columns c
+WHERE c.table_schema = $1 AND c.table_name = $2
+ORDER BY c.ordinal_position";
+
+pub const POSTGRESQL_FOREIGN_KEYS_QUERY: &str = "
+SELECT pc.conname::text, rn.nspname::text, rt.relname::text,
+       ARRAY(SELECT a.attname::text FROM unnest(pc.conkey) WITH ORDINALITY k(n, o)
+             JOIN pg_attribute a ON a.attrelid = pc.conrelid AND a.attnum = k.n ORDER BY k.o),
+       ARRAY(SELECT a.attname::text FROM unnest(pc.confkey) WITH ORDINALITY k(n, o)
+             JOIN pg_attribute a ON a.attrelid = pc.confrelid AND a.attnum = k.n ORDER BY k.o)
+FROM pg_constraint pc
+JOIN pg_class t ON t.oid = pc.conrelid
+JOIN pg_namespace n ON n.oid = t.relnamespace
+JOIN pg_class rt ON rt.oid = pc.confrelid
+JOIN pg_namespace rn ON rn.oid = rt.relnamespace
+WHERE pc.contype = 'f' AND n.nspname = $1 AND t.relname = $2
+ORDER BY pc.conname";
+
+pub const POSTGRESQL_INDEXES_QUERY: &str = "
+SELECT i.relname::text, ix.indisunique,
+       ARRAY(SELECT a.attname::text FROM unnest(ix.indkey::int2[]) WITH ORDINALITY k(n, o)
+             JOIN pg_attribute a ON a.attrelid = ix.indrelid AND a.attnum = k.n ORDER BY k.o)
+FROM pg_index ix
+JOIN pg_class t ON t.oid = ix.indrelid
+JOIN pg_namespace n ON n.oid = t.relnamespace
+JOIN pg_class i ON i.oid = ix.indexrelid
+WHERE n.nspname = $1 AND t.relname = $2
+  AND NOT ix.indisprimary AND ix.indexprs IS NULL AND ix.indpred IS NULL
+ORDER BY i.relname";

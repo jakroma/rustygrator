@@ -1,5 +1,5 @@
 [package]
-name = "data-mover-cli"
+name = "rustygrator-cli"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,11 +8,16 @@ diesel = "2.1.4"
 clap = { version = "4.4.18", features = ["derive"] }
 dotenv = "0.15.0"
 tokio = { version ="1.35.1", features = ["full"] }
-data-mover-core = { path = "../core" }
+rustygrator-core = { path = "../core" }
 tokio-postgres = "0.7.10"
 log = "0.4"
 env_logger = "0.11.3"
 
 [[bin]]
-name = "data-mover"
+name = "rustygrator"
 path = "src/main.rs"
+[dev-dependencies]
+rusqlite = { version = "0.31", features = ["bundled"] }
+tempfile = "3"
+url = "2.5.0"
+mongodb = "2.8.0"

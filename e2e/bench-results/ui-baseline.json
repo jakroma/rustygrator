@@ -1,0 +1,11 @@
+{
+  "rows": 10000000,
+  "startup_ms": 4187.7407,
+  "first_rows_small_ms": 3.14,
+  "first_rows_big_ms": 3.3044,
+  "frame_p50_ms": 0.3883,
+  "frame_p95_ms": 0.9253,
+  "frame_max_ms": 85.51219999999999,
+  "frames": 83334,
+  "memory_mb": 113.78688
+}

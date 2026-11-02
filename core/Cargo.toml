@@ -1,5 +1,5 @@
 [package]
-name = "data-mover-core"
+name = "rustygrator-core"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,17 +7,56 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.4.18", features = ["derive"] }
-diesel = "2.1.4"
-dotenv = "0.15.0"
 mongodb = "2.8.0"
 tokio = { version ="1.35.1", features = ["full"] }
-tokio-postgres = { version = "0.7.10", features = ["with-chrono-0_4", "with-uuid-1"] }
+tokio-postgres = { version = "0.7.10", features = ["with-chrono-0_4", "with-uuid-1", "with-serde_json-1"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = "0.4.33"
 thiserror = "1.0.56"
 url = "2.5.0"
+# FIX-1: user names / passwords in connection strings are percent-encoded (already in the tree through url)
+percent-encoding = "2"
 async-trait="0.1.80"
 log = "0.4"
 env_logger = "0.11.3"
 uuid = "1.0.0"
+# SQLite support (DB-7..DB-9); bundled so no system libsqlite3 is required
+rusqlite = { version = "0.31", features = ["bundled", "column_decltype"] }
+# needed for the tokio-postgres ToSql implementation (BytesMut) and stream helpers
+bytes = "1"
+futures-util = "0.3"
+# dbc v3 (section 7): block compression, authenticated encryption, key derivation
+lz4_flex = "0.11"
+zstd = "0.13"
+aes-gcm = "0.10"
+chacha20poly1305 = "0.10"
+argon2 = "0.5"
+getrandom = "0.2"
+# ScyllaDB (DB-10..DB-12): shard-aware CQL driver
+scylla = { version = "1", features = ["rustls-023"] }
+# CONN-3: TLS for PostgreSQL and ScyllaDB (`sslmode`, `sslrootcert`, `sslcert`, `sslkey` in the
+# connection string); ring backend, so building needs no extra C toolchain
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+tokio-postgres-rustls = "0.13"
+rustls-native-certs = "0.8"
+# MySQL (MY-1..MY-8): pure Rust async client, rustls with the ring provider, binlog for live mode
+mysql_async = { version = "0.37", default-features = false, features = ["default-rustls-ring", "binlog"] }
+# Oracle (ORA-1..ORA-10): ODPI-C binding; loads Oracle Instant Client (OCI) at run time, not at build time
+oracle = { version = "0.6", features = ["chrono"] }
+
+[dev-dependencies]
+tempfile = "3"
+criterion = { version = "0.5", features = ["async_tokio"] }
+
+# PERF-9: sampling profiler (no kernel permissions needed) for core/examples/profile.rs; pprof builds on Unix only
+[target.'cfg(unix)'.dev-dependencies]
+pprof = { version = "0.14", features = ["flamegraph"] }
+
+[[bench]]
+name = "dbc"
+harness = false
+
+[[bench]]
+name = "conversions"
+harness = false
