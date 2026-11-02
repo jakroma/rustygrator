@@ -1,8 +1,17 @@
-[profile.release]
-resolver = "2"
-
 [workspace]
+resolver = "2"
 members = [
     "core",
-    "cli"
+    "cli",
+    "bench",
+    "desktop"
 ]
+
+# PERF-17: whole-program optimization for the release binary
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
+[profile.bench]
+lto = "fat"
+codegen-units = 1

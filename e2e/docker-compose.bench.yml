@@ -1,0 +1,76 @@
+# End-to-end benchmarks (PERF-2..PERF-8): every migration path against databases with fixed
+# versions and resource limits, so runs are comparable over time.
+#
+#   e2e/run-benchmarks.sh [quick|full] [--save-baseline]   (bash; on Windows: Git Bash or WSL)
+#
+# Results and baselines are written to e2e/bench-results/.
+name: rustygrator-bench
+
+x-limits: &limits
+  cpus: "2"
+  mem_limit: 2g
+
+services:
+  postgres:
+    image: postgres:16.4
+    <<: *limits
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=20", "-c", "max_wal_senders=20", "-c", "shared_buffers=256MB"]
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bench
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d bench"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  mongo:
+    image: mongo:7.0.14
+    <<: *limits
+    command: ["--replSet", "rs0", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.5"]
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "try { rs.status() } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]}) }; if (!db.hello().isWritablePrimary) { quit(1) }"
+      interval: 2s
+      timeout: 10s
+      retries: 30
+      start_period: 5s
+
+  scylla:
+    image: scylladb/scylla:6.2.0
+    cpus: "2"
+    mem_limit: 2g
+    command: ["--smp", "2", "--memory", "1500M", "--overprovisioned", "1", "--developer-mode", "1", "--api-address", "0.0.0.0"]
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'SELECT release_version FROM system.local' || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 40
+      start_period: 30s
+
+  bench:
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile.bench
+    cpus: "4"
+    mem_limit: 4g
+    environment:
+      BENCH_PG_URL: postgresql://user:password@postgres:5432/bench
+      BENCH_MONGO_URL: mongodb://mongo:27017/?replicaSet=rs0
+      BENCH_SCYLLA_URL: scylla://scylla:9042/
+      BENCH_PROFILE: ${BENCH_PROFILE:-quick}
+      BENCH_SAVE_BASELINE: ${BENCH_SAVE_BASELINE:-}
+    volumes:
+      - ./bench-results:/results
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      scylla:
+        condition: service_healthy

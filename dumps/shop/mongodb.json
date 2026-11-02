@@ -1,0 +1,25 @@
+{
+  "customers": [
+    {"_id": 1, "email": "anna@example.com", "name": "Anna Kowalska", "vip": true, "balance": {"$numberDecimal": "1250.50"}, "created_at": {"$date": "2024-01-15T09:30:00Z"}},
+    {"_id": 2, "email": "bob@example.com", "name": "Bob O'Brien", "vip": false, "balance": {"$numberDecimal": "0.00"}, "created_at": {"$date": "2024-02-01T14:00:00Z"}},
+    {"_id": 3, "email": "zofia@example.com", "name": "Zofia Żółć-Gęślą", "vip": false, "balance": {"$numberDecimal": "-15.75"}, "created_at": {"$date": "2024-02-29T23:59:59.123Z"}},
+    {"_id": 4, "email": "li@example.com", "name": "李雷", "vip": true, "balance": null, "created_at": {"$date": "2024-03-10T08:00:00Z"}},
+    {"_id": 5, "email": "emoji@example.com", "name": "Emoji 🚀 User", "vip": false, "balance": {"$numberDecimal": "99999.99"}, "created_at": {"$date": "2024-04-01T12:00:00Z"}},
+    {"_id": 6, "email": "empty@example.com", "name": "", "vip": false, "balance": null, "created_at": {"$date": "2024-05-05T05:05:05Z"}}
+  ],
+  "products": [
+    {"_id": 1, "sku": "SKU-001", "name": "Keyboard", "price": {"$numberDecimal": "199.99"}, "weight_kg": 0.95, "tags": ["office", "usb"], "image": {"$binary": {"base64": "iVBORw==", "subType": "00"}}, "available_from": {"$date": "2024-01-01T00:00:00Z"}, "external_id": {"$uuid": "6f1c2a3e-1b2c-4d5e-8f90-a1b2c3d4e5f6"}},
+    {"_id": 2, "sku": "SKU-002", "name": "Mouse", "price": {"$numberDecimal": "49.50"}, "weight_kg": 0.12, "tags": ["office"], "image": null, "available_from": {"$date": "2024-01-15T00:00:00Z"}, "external_id": {"$uuid": "0a9b8c7d-6e5f-4a3b-9c2d-1e0f9a8b7c6d"}},
+    {"_id": 3, "sku": "SKU-003", "name": "Monitor 27\"", "price": {"$numberDecimal": "1299.00"}, "weight_kg": 6.4, "tags": ["monitor"], "specs": {"hdr": true, "size": 27}, "image": {"$binary": {"base64": "AP8Q", "subType": "00"}}, "available_from": {"$date": "2024-02-01T00:00:00Z"}, "external_id": {"$uuid": "11111111-2222-4333-8444-555555555555"}},
+    {"_id": 4, "sku": "SKU-004", "name": "Cable, 2m", "price": {"$numberDecimal": "9.99"}, "weight_kg": null, "tags": [], "image": null, "available_from": null, "external_id": {"$uuid": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}},
+    {"_id": 5, "sku": "SKU-005", "name": "Gift card", "price": {"$numberDecimal": "100.00"}, "weight_kg": 0.0, "image": null, "available_from": {"$date": "2024-12-01T00:00:00Z"}, "external_id": {"$uuid": "99999999-8888-4777-8666-555555555555"}}
+  ],
+  "orders": [
+    {"_id": 1, "customer_id": 1, "status": "paid", "ordered_at": {"$date": "2024-03-01T10:00:00Z"}, "note": null, "items": [{"product_id": 1, "quantity": 1, "unit_price": {"$numberDecimal": "199.99"}}, {"product_id": 2, "quantity": 2, "unit_price": {"$numberDecimal": "49.50"}}]},
+    {"_id": 2, "customer_id": 1, "status": "sent", "ordered_at": {"$date": "2024-03-05T11:30:00Z"}, "note": "leave at the door", "items": [{"product_id": 3, "quantity": 1, "unit_price": {"$numberDecimal": "1299.00"}}]},
+    {"_id": 3, "customer_id": 2, "status": "new", "ordered_at": {"$date": "2024-03-06T09:15:00Z"}, "note": null, "items": [{"product_id": 4, "quantity": 3, "unit_price": {"$numberDecimal": "9.99"}}, {"product_id": 2, "quantity": 1, "unit_price": {"$numberDecimal": "49.50"}}]},
+    {"_id": 4, "customer_id": 3, "status": "paid", "ordered_at": {"$date": "2024-03-07T18:45:30.500Z"}, "note": "Proszę o fakturę; NIP 123", "items": [{"product_id": 5, "quantity": 2, "unit_price": {"$numberDecimal": "100.00"}}, {"product_id": 1, "quantity": 1, "unit_price": {"$numberDecimal": "189.99"}}]},
+    {"_id": 5, "customer_id": 4, "status": "cancelled", "ordered_at": {"$date": "2024-03-08T07:00:00Z"}, "note": null, "items": [{"product_id": 3, "quantity": 1, "unit_price": {"$numberDecimal": "1299.00"}}]},
+    {"_id": 6, "customer_id": 5, "status": "new", "ordered_at": {"$date": "2024-03-09T20:00:00Z"}, "note": "gift; wrap it", "items": [{"product_id": 4, "quantity": 10, "unit_price": {"$numberDecimal": "8.99"}}]}
+  ]
+}

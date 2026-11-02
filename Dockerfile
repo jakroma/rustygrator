@@ -1,10 +1,10 @@
-FROM rust:1.75 as builder
-RUN USER=root cargo new --bin data-mover
-WORKDIR /data-mover
+FROM rust:1-bookworm AS builder
+RUN USER=root cargo new --bin rustygrator
+WORKDIR /rustygrator
 COPY ./ ./
 RUN cargo build --release
 
 FROM ubuntu:latest
-COPY --from=builder /data-mover/target/release/data-mover /usr/local/bin/data-mover
+COPY --from=builder /rustygrator/target/release/rustygrator /usr/local/bin/rustygrator
 
-CMD ["data-mover"]
+CMD ["rustygrator"]

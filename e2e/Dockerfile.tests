@@ -1,0 +1,17 @@
+# Test runner for e2e/docker-compose.test.yml: builds the workspace with its tests, then runs
+# every test, including the ones that need PostgreSQL and MongoDB (#[ignore]d locally).
+
+# Oracle Instant Client (loaded at run time by the oracle crate, ORA-1), from Oracle's own image
+FROM ghcr.io/oracle/oraclelinux9-instantclient:23 AS instantclient
+
+FROM rust:1-bookworm
+
+COPY --from=instantclient /usr/lib/oracle/23/client64/lib /opt/oracle/instantclient
+RUN apt-get update && apt-get install -y --no-install-recommends libaio1 && rm -rf /var/lib/apt/lists/*
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient
+
+WORKDIR /rustygrator
+COPY . .
+RUN cargo test --workspace --release --no-run
+
+CMD ["cargo", "test", "--workspace", "--release", "--", "--include-ignored", "--test-threads=4"]
